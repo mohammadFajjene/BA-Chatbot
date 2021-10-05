@@ -5,6 +5,7 @@
       <mapping pattern="ppython" type="AUTO_DETECTED" />
       <mapping pattern="A1" type="AUTO_DETECTED" />
       <mapping pattern="a1" type="AUTO_DETECTED" />
+      <mapping ext="pkl" type="PLAIN_TEXT" />
     </extensionMap>
   </component>
 </application>
