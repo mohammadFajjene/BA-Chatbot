@@ -1,0 +1,28 @@
+
+
+{"intents" :  [
+  {"state":  "greetings",
+  "patterns":  ["hello", "hey", "hi", "greetings", "my name is", "i am"]
+  },
+
+  {"state":  "departments",
+  "patterns":  []
+  },
+
+  {"state":  "subjects",
+  "patterns":  []
+  },
+
+  {"state":  "exams",
+  "patterns":  ["day", "date", "time", "tester","room"]
+  },
+
+  {"state":  "doctors",
+  "patterns":  []
+  },
+
+  {"state":  "goodbye",
+  "patterns":  ["goodbye", "bye"]
+  }
+
+]}
