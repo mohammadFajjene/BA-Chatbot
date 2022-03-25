@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href = "{% static 'chatbot/styles/base.css' %}">
+    <title>Chatbot</title>
+<!--    load jquery-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1> Welcome to Chatbot </h1>
+
+
+
+
+    <p id="p" align="left"><span style='color:blue'><span style='color:red'>Alice: </span>Welcome to Chatbot, my name is Alice, What is your name ?</span> <br/></p>
+
+    <form id="chat" method="post">
+        {% csrf_token %}
+        <input autocomplete="off" id="chatQuestion" type="text" name="question" placeholder="enter your question here ...">
+    </form>
+
+<!--    script to send to backend-->
+    <script>
+        $(document).ready(function(){
+            window.responseParagraph = document.getElementById("p");
+            window.clientName = "User: ";
+            window.correctAnswers = 0;
+            window.totalAnswers = 0;
+
+        $("#chatQuestion").keypress(function(e) {
+            if (e.keyCode == 13) {
+
+                $("#p").append("<span style='color:green'><span style='color:darkred'>" + window.clientName + "</span> " + $('#chatQuestion').val() + "</span><br/>");
+                window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+
+                var inputQuestion = $("#chatQuestion").val();
+                console.log(typeof inputQuestion)
+                console.log('inputQuestion ' + inputQuestion)
+                questionLecturer = (inputQuestion.includes('email') || inputQuestion.includes('function') || inputQuestion.includes('mobile')) && (!(inputQuestion.includes('departments') || inputQuestion.includes('contact') || inputQuestion.includes('phone') || inputQuestion.includes('fax') || inputQuestion.includes('address') || inputQuestion.includes('opening hours')))
+                // && (!(inputQuestion.includes('departments','contact', 'email', 'phone', 'fax', 'address', 'opening hours'))));
+
+                console.log('questionLecturer ' + questionLecturer);
+                console.log(window.lecturerName);
+                console.log('window.answeredCorrectly ' + window.answeredCorrectly);
+                if (questionLecturer && window.answeredCorrectly){
+                    inputQuestion = inputQuestion + ' ' + window.lecturerName.toLowerCase();
+                    window.answeredCorrectly = false;
+                    window.lecturerSet = false;
+                }
+
+                console.log('second inputQuestion ' + inputQuestion)
+
+
+                $("#chat").submit(function(e) {
+
+                    e.preventDefault();
+                    if (window.chackName) {
+
+                        var reg = new RegExp('^[Nn].*');
+                        if (reg.test(inputQuestion)){
+
+                            $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + window.greetingsList[0] + "</span> <br/>");
+                            window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                             window.totalAnswers = window.totalAnswers + 1;
+
+                        } else {
+
+                            $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + window.greetingsList[1] + "</span> <br/>");
+                            window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                            window.clientName = window.greetingsList[2].charAt(0).toUpperCase() + window.greetingsList[2].slice(1)  + ": ";
+                              window.correctAnswers = window.correctAnswers + 1;
+                            window.totalAnswers = window.totalAnswers + 1;
+
+                        }
+                        window.chackName = false;
+                        $("#chat").unbind('submit');
+
+                    } else if (window.selectSubject) {
+                        // select subject from list of subjects returned
+                        $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + window.fetchedList[parseInt(inputQuestion)] + "</span> <br/>");
+                        window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                        $("#chat").unbind('submit');
+                        window.selectSubject = false;
+                        fullResult = window.fetchedList[parseInt(inputQuestion)].split('lecturer:');
+                        if (fullResult.length > 1){
+                            window.lecturerName = fullResult[1].split(',')[0];
+                            window.lecturerSet = true;
+                            window.answeredCorrectly = true;
+                            window.correctAnswers = window.correctAnswers + 1;
+                            window.totalAnswers = window.totalAnswers + 1;
+                            // console.log(window.lecturerName);
+                        }
+
+                        $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + window.confirmList[0] + "</span> <br/>");
+                        window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+
+                    } else if (window.checkAnswer){
+                        // check answer validity
+                        var reg = new RegExp('^[Nn].*');
+                        if (reg.test(inputQuestion)){
+                            $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + window.confirmList[1] + "</span> <br/>");
+                            window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                            window.totalAnswers = window.totalAnswers + 1;
+                        } else {
+
+                            $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + window.confirmList[2] + "</span> <br/>");
+                            $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + window.confirmList[3] + "</span> <br/>");
+                            window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                             window.correctAnswers = window.correctAnswers + 1;
+                            window.totalAnswers = window.totalAnswers + 1;
+
+                        }
+                        $("#chat").unbind('submit');
+                        window.checkAnswer = false;
+
+                    } else {
+
+                        // main ajax request
+                    $.ajax({
+                        type: "POST",
+                        url: '',
+                        dataType: 'json',
+                        data: {
+                            'question': inputQuestion,
+                            'csrfmiddlewaretoken': '{{ csrf_token }}',
+                        },
+                        cache: false,
+                        success: function (answer) {
+                            if (answer.name.length == 4) {
+
+                                // response from greetings
+                                window.fetchedList = [];
+                                $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + answer.name[0] + "</span> <br/>");
+                                window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                                window.chackName = true;
+                                window.greetingsList = answer.name.slice(1);
+
+
+
+                            } else if (answer.name.length == 5) {
+
+                                // response from other states with multiple rows returned
+                                window.fetchedList = [];
+                                $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + answer.name[0] + "</span> <br/>");
+                                window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                                window.checkAnswer = true;
+                                window.confirmList = answer.name.slice(1);
+                                $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + window.confirmList[0] + "</span> <br/>");
+                                window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                                // console.log(answer.name[0]);
+                                fullResult = answer.name[0];
+                                fullResult = fullResult[0].split('lecturer:');
+                                // console.log(fullResult);
+                                if (fullResult.length > 1){
+                                    window.lecturerName = fullResult[1].split(',')[0];
+                                    window.lecturerSet = true;
+                                    window.answeredCorrectly = true;
+                                    // console.log(window.lecturerName);
+                                }
+
+                            } else if (answer.name.length == 7) {
+
+                                // response from subject state
+                                window.fetchedList = [];
+                                $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + answer.name[1] + "</span> <br/>");
+                                $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + answer.name[0] + "</span> <br/>");
+                                window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                                window.selectSubject = true;
+                                window.checkAnswer = true;
+                                window.fetchedList = answer.name[2];
+                                window.confirmList = answer.name.slice(3);
+
+
+
+                            } else {
+                                // response contains one parameter
+                                $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span>" + answer.name + "</span> <br/>");
+                                window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                                returnedValue = answer.name;
+                                if (returnedValue.includes('goodbye')){
+                                    $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span> Total Answers is: " + window.totalAnswers + "</span> <br/>");
+                                    $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span> Correct Answers is: " + window.correctAnswers + "</span> <br/>");
+                                    window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                                    if (window.totalAnswers > 0){
+                                        $("#p").append("<span style='color:blue'><span style='color:red'>Alice: </span> Percentage is: " + (Math.round((window.correctAnswers/window.totalAnswers) * 100) / 100)*100 + " %</span> <br/>");
+                                        window.responseParagraph.scrollTop = window.responseParagraph.scrollHeight;
+                                    }
+                                }
+
+                            }
+
+                            $("#chat").unbind('submit');
+
+                        }
+                    });
+
+                }
+                });
+                $("#chatQuestion").val("");
+            }
+          });
+        });
+
+
+    </script>
+
+</body>
+</html>
